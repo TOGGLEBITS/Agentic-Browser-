@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity DOM Agent Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --text-main: #111827;
+            --text-muted: #4b5563;
+            --text-light: #9ca3af;
+            --bg-glass: rgba(255, 255, 255, 0.6);
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --primary-purple: #7c3aed;
+            --primary-purple-hover: #6d28d9;
+            --radius-lg: 24px;
+            --radius-pill: 999px;
+            --terminal-green: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: #f0e6ff;
+            background-image: 
+                radial-gradient(at 0% 0%, #e0c3fc 0px, transparent 50%),
+                radial-gradient(at 50% 0%, #c2e9fb 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #d1f4d9 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #e0c3fc 0px, transparent 50%),
+                radial-gradient(at 0% 100%, #a1c4fd 0px, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 2rem;
+            overflow-x: auto;
+            color: var(--text-main);
+        }
+
+        .bg-nodes {
+            position: fixed; top: 10%; right: 20%;
+            width: 300px; height: 300px;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.8) 2px, transparent 2px);
+            background-size: 40px 40px; opacity: 0.4; z-index: -1; pointer-events: none;
+        }
+
+        .app-container {
+            display: flex; width: 100%; min-width: 1400px; height: 85vh; min-height: 600px; gap: 2rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex; flex-direction: column; align-items: center;
+            background: var(--bg-glass); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.8); border-radius: var(--radius-pill);
+            padding: 1.5rem 0.5rem; width: 70px; height: 100%;
+        }
+        .logo-ag {
+            width: 45px; height: 45px; background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+        .nav-btn {
+            width: 45px; height: 45px; border-radius: 50%; background: white; border: none;
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+            color: var(--text-muted); cursor: pointer; margin-top: 1rem;
+        }
+        .nav-btn.active { color: var(--text-main); transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+
+        .dashboard { flex: 1; display: flex; flex-direction: column; }
+
+        /* Header */
+        header { display: flex; justify-content: space-between; margin-bottom: 3rem; }
+        .brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; background: var(--bg-glass); padding: 0.5rem 1rem; border-radius: var(--radius-pill); }
+        .top-right { display: flex; align-items: center; gap: 1.5rem; }
+        .status-indicator { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.9rem; font-weight: 600; }
+        .status-dot-wrapper { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-muted); }
+        .status-dot { width: 8px; height: 8px; background-color: #9ca3af; border-radius: 50%; }
+        .status-dot.online { background-color: var(--terminal-green); box-shadow: 0 0 8px var(--terminal-green); }
+
+        /* Left Column */
+        .content-wrapper { display: flex; gap: 3rem; flex: 1; min-height: 0; }
+        .hero-section { flex: 1; max-width: 450px; display: flex; flex-direction: column; justify-content: center; }
+        .hero-section h1 { font-size: 2.8rem; line-height: 1.1; margin-bottom: 1rem; }
+        
+        /* Input Panel */
+        .input-panel {
+            background: var(--bg-glass); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.7); border-radius: var(--radius-lg); padding: 1.5rem;
+        }
+        .input-bar {
+            display: flex; align-items: center; background: white; border-radius: var(--radius-pill);
+            padding: 0.5rem 0.5rem 0.5rem 1.2rem; margin-bottom: 1rem;
+        }
+        .input-bar input { flex: 1; border: none; outline: none; font-size: 0.95rem; padding: 0.5rem; }
+        .action-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background: var(--primary-purple); color: white; transition: all 0.2s;
+        }
+        .action-btn:hover { background: var(--primary-purple-hover); transform: scale(1.05); }
+
+        /* Right Column (Functional Panels) */
+        .cards-container { display: flex; gap: 1.5rem; align-items: stretch; flex: 2; }
+        
+        .agent-card {
+            background: var(--bg-card); border-radius: var(--radius-lg); padding: 1.5rem;
+            width: 320px; display: flex; flex-direction: column; border: 1px solid white;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.04);
+        }
+        .card-header { font-weight: 700; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;}
+
+        /* Live Vision Specifics */
+        .vision-container {
+            flex: 1; background: #000; border-radius: 12px; display: flex;
+            align-items: center; justify-content: center; overflow: hidden; position: relative;
+        }
+        #live-screen { max-width: 100%; max-height: 100%; display: none; }
+        #placeholder-text { color: #666; font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; }
+
+        /* Terminal Specifics */
+        .terminal-container {
+            flex: 1; background: #0a0a0f; border-radius: 12px; padding: 1rem;
+            overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+        }
+        .log-entry { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #a1a1aa; line-height: 1.4; }
+        .log-action { color: #00f3ff; font-weight: bold; }
+        .log-success { color: var(--terminal-green); font-weight: bold; }
+        .log-error { color: #ef4444; }
+
+        /* Robot Bubble */
+        .robot-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 200px;}
+        .chat-bubble {
+            background: white; padding: 1rem; border-radius: 16px; border-bottom-right-radius: 4px;
+            font-size: 0.85rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.08); margin-bottom: 1rem;
+        }
+        .robot-avatar { font-size: 5rem; animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+
+        /* Custom Scrollbar for Terminal */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-nodes"></div>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-ag">AG</div>
+            <button class="nav-btn active"><i class="ph ph-code"></i></button>
+            <button class="nav-btn"><i class="ph ph-eye"></i></button>
+            <button class="nav-btn"><i class="ph ph-stack"></i></button>
+        </aside>
+
+        <main class="dashboard">
+            <header>
+                <div class="brand"><i class="ph ph-aperture" style="color: var(--primary-purple);"></i> Antigravity DOM Agent</div>
+                <div class="top-right">
+                    <div class="status-indicator">
+                        System Status
+                        <div class="status-dot-wrapper"><div class="status-dot" id="status-dot"></div> <span id="status-text">Disconnected</span></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="hero-section">
+                    <h1>Agent Controller. <br><strong>Ready to Automate.</strong></h1>
+                    
+                    <div class="input-panel">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 10px;">Pipeline: Browser -> Vision -> Action</div>
+                        
+                        <div class="input-bar">
+                            <i class="ph ph-globe" style="color: var(--text-light); margin-right: 0.5rem; font-size: 1.2rem;"></i>
+                            <input type="text" id="target-url" placeholder="Target URL (e.g., https://google.com)" value="https://google.com">
+                        </div>
+
+                        <div class="input-bar">
+                            <i class="ph ph-terminal-window" style="color: var(--text-light); margin-right: 0.5rem; font-size: 1.2rem;"></i>
+                            <input type="text" id="objective" placeholder="Objective (e.g., Search for Python)">
+                            <button id="start-btn" class="action-btn"><i class="ph ph-play"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cards-container">
+                    
+                    <div class="agent-card">
+                        <div class="card-header"><i class="ph ph-camera" style="font-size: 1.5rem; color: var(--primary-purple);"></i> Live Vision</div>
+                        <div class="vision-container">
+                            <span id="placeholder-text">Awaiting execution...</span>
+                            <img id="live-screen" src="" alt="Live View">
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="card-header"><i class="ph ph-code" style="font-size: 1.5rem; color: var(--primary-purple);"></i> Execution Log</div>
+                        <div class="terminal-container" id="terminal">
+                            </div>
+                    </div>
+
+                    <div class="robot-wrapper">
+                        <div class="chat-bubble" id="robot-bubble">Awaiting command protocol...</div>
+                        <div class="robot-avatar">🤖</div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        const startBtn = document.getElementById('start-btn');
+        const targetUrl = document.getElementById('target-url');
+        const objectiveInput = document.getElementById('objective');
+        const liveScreen = document.getElementById('live-screen');
+        const placeholderText = document.getElementById('placeholder-text');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const robotBubble = document.getElementById('robot-bubble');
+
+        let ws = null;
+
+        function appendLog(message, type = 'normal') {
+            const div = document.createElement('div');
+            let cssClass = 'log-entry';
+            if (type === 'action') cssClass += ' log-action';
+            if (type === 'error') cssClass += ' log-error';
+            if (type === 'success') cssClass += ' log-success';
+            
+            div.className = cssClass;
+            div.textContent = `> ${message}`;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight; 
+        }
+
+        startBtn.addEventListener('click', () => {
+            const url = targetUrl.value;
+            const objective = objectiveInput.value;
+
+            if (!url || !objective) return alert("Please enter both URL and Objective.");
+
+            // UI Reset
+            terminal.innerHTML = '';
+            liveScreen.style.display = 'none';
+            placeholderText.style.display = 'block';
+            robotBubble.innerHTML = "Connecting to<br>browser node...";
+
+            // Initialize WebSocket (ensure your server.py is running on port 8000)
+            ws = new WebSocket("ws://localhost:8000/ws");
+
+            ws.onopen = () => {
+                statusText.textContent = "Online & Executing";
+                statusDot.classList.add('online');
+                startBtn.innerHTML = '<i class="ph ph-spinner-gap"></i>'; // Spinner icon
+                startBtn.disabled = true;
+                
+                ws.send(JSON.stringify({ url, objective }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'image') {
+                    liveScreen.src = `data:image/jpeg;base64,${data.data}`;
+                    liveScreen.style.display = 'block';
+                    placeholderText.style.display = 'none';
+                } else {
+                    appendLog(data.msg, data.type);
+                    
+                    // Update the Robot Bubble if the AI is "Thinking"
+                    if (data.msg.includes("💡 Thought:")) {
+                        robotBubble.innerHTML = data.msg.replace("💡 Thought: ", "").substring(0, 60) + "...";
+                    }
+                    if (data.type === 'action') {
+                        robotBubble.innerHTML = "Executing action...<br>Please wait.";
+                    }
+                }
+                
+                if (data.type === 'success' || (data.msg && data.msg.includes('Agent task finished'))) {
+                    robotBubble.innerHTML = "Task Completed! ✨";
+                    ws.close();
+                }
+            };
+
+            ws.onclose = () => {
+                statusText.textContent = "Disconnected";
+                statusDot.classList.remove('online');
+                startBtn.innerHTML = '<i class="ph ph-play"></i>';
+                startBtn.disabled = false;
+            };
+        });
+    </script>
+</body>
+</html>
